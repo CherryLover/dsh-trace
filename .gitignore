@@ -10,4 +10,3 @@ coverage/
 *.sqlite
 *.sqlite-*
 request-traces/
-docs/releases.json

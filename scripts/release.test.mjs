@@ -4,7 +4,6 @@ import { validateVersion, releasePlan, githubJson, main as checkRelease } from '
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pageData } from './release-page.mjs';
 
 test('SemVer accepts release, prerelease and build identifiers', () => {
   for (const version of ['0.5.1', '1.0.0', '2.3.4-rc.1', '1.2.3-alpha-1+build.007', '1.2.3+001']) {
@@ -38,20 +37,6 @@ test('API distinguishes missing records from authentication and server failures'
   }
 });
 
-test('page catalog excludes drafts, sorts, picks latest stable, maps downloadable assets', () => {
-  const releases = [
-    { tag_name: 'v0.5.1', html_url: 'https://example.test/stable', published_at: '2026-01-01', assets: [{ name: 'pkg.tgz', browser_download_url: 'https://example.test/pkg.tgz', size: 42, digest: 'sha256:abc' }] },
-    { tag_name: 'v0.6.0-rc.1', published_at: '2026-01-02', prerelease: true },
-    { tag_name: 'v9.0.0', draft: true },
-  ];
-  const result = pageData('CherryLover/dsh-trace', releases, new Date('2026-01-03T00:00:00Z'));
-  assert.equal(result.generatedAt, '2026-01-03T00:00:00.000Z');
-  assert.equal(result.releases.length, 2);
-  assert.equal(result.releases[0].version, '0.6.0-rc.1');
-  assert.equal(result.latest.tag, 'v0.5.1');
-  assert.deepEqual(result.latest.assets[0], { name: 'pkg.tgz', url: 'https://example.test/pkg.tgz', size: 42, digest: 'sha256:abc' });
-});
-
 test('manual main bootstrap is idempotent and rejects non-main dispatch', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'release-check-'));
   const keys = ['GITHUB_EVENT_NAME', 'GITHUB_REF', 'GITHUB_EVENT_PATH', 'GITHUB_REPOSITORY', 'GITHUB_OUTPUT'];
@@ -75,9 +60,4 @@ test('manual main bootstrap is idempotent and rejects non-main dispatch', async 
     }
     await rm(directory, { recursive: true, force: true });
   }
-});
-
-test('page catalog supports empty repositories and prerelease-only repositories', () => {
-  assert.equal(pageData('owner/repo', []).latest, null);
-  assert.equal(pageData('owner/repo', [{ tag_name: 'v1.0.0-rc.1', prerelease: true }]).latest.version, '1.0.0-rc.1');
 });

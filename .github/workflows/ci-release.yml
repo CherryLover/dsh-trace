@@ -1,4 +1,4 @@
-name: CI, release and Pages
+name: CI and release
 
 on:
   workflow_dispatch:
@@ -92,44 +92,3 @@ jobs:
           args=(--repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$RELEASE_TAG" --generate-notes)
           if [[ "$PRERELEASE" == true ]]; then args+=(--prerelease); fi
           gh release create "$RELEASE_TAG" release-artifacts/*.tgz release-artifacts/SHA256SUMS "${args[@]}"
-
-  page-build:
-    name: Generate release page data
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    needs: release
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - name: Build current release catalog
-        run: node scripts/release-page.mjs
-        env:
-          GH_TOKEN: ${{ github.token }}
-      - name: Verify page entry exists
-        run: test -f docs/index.html
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs
-
-  page-deploy:
-    name: Deploy GitHub Pages
-    needs: page-build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy static page
-        id: deployment
-        uses: actions/deploy-pages@v4

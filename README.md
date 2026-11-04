@@ -1,6 +1,22 @@
 # Harness Trace 0.5.1
 
-[版本下载](https://github.com/CherryLover/dsh-trace/releases) · [展示页面](https://cherrylover.github.io/dsh-trace/) · [问题反馈](https://github.com/CherryLover/dsh-trace/issues)
+[版本下载](https://github.com/CherryLover/dsh-trace/releases) · [问题反馈](https://github.com/CherryLover/dsh-trace/issues)
+
+## 界面截图
+
+以下两张图片截取自实际运行的 Harness 0.2.1-rc.5 / Harness Trace 0.5.1，仅裁剪展示区域，未重绘界面。统计是截图时的真实观测快照，不代表全部请求均已结束。
+
+### 当前会话的请求追踪
+
+会话总览集中展示请求次数、失败与重试、耗时和 token 用量；下方按轮次列出请求，可按异常类型和状态筛选，并展开查看证据。
+
+![当前会话的请求追踪：会话统计、异常分类与按轮次排列的请求列表](docs/screenshots/session-requests.png)
+
+### 设置 → 请求追踪
+
+在原生设置中管理自动清理、请求条数、保留时长、详情容量和异常保护，下方查看追踪记录与磁盘占用。本次截图未修改设置，也未执行清理。
+
+![请求追踪设置：保留规则、异常保护与追踪记录空间](docs/screenshots/settings.png)
 
 ## 独立插件发布
 
@@ -14,7 +30,7 @@
 
 ## Git 与自动发布
 
-主分支为 `main`。每次推送运行 Node 22/24 测试和打包检查。工作流比较该次推送前后的 `package.json` 版本：首次推送发布当前版本，后续仅版本变更时创建 `v<version>` 标签和 GitHub Release，并附安装包与校验值；已有同名版本避免重复发布。每次成功主分支推送都重新部署展示页面，更新版本与下载入口。普通改动不创建 Release，PR 只执行检查。
+主分支为 `main`。每次推送运行 Node 22/24 测试和打包检查。工作流比较该次推送前后的 `package.json` 版本：首次推送发布当前版本，后续仅版本变更时创建 `v<version>` 标签和 GitHub Release，并附安装包与校验值；已有同名版本避免重复发布。README 直接展示真实界面截图，不部署 GitHub Pages。普通改动（包括文档和截图）不创建 Release，PR 只执行检查。
 
 日常操作：
 
@@ -32,9 +48,9 @@ git commit -m "chore: bump version"
 git push origin main
 ```
 
-请先将所有要发布的代码提交，再提交版本更新；CI 验证通过后才会发布。页面构建产物和版本 JSON 由工作流生成，不需要手动修改版本徽标。
+请先将所有要发布的代码提交，再提交版本更新；CI 验证通过后才会发布。更新界面展示时，替换 `docs/screenshots/` 下的截图并同步 README 描述即可。
 
-首次端到端验收（2026-11-04）：GitHub Actions 的 Linux Node 22/24 均通过 149 项插件测试与 8 项发布测试；自动创建 `v0.5.1`，附 `.tgz` 和 SHA-256 校验文件，Pages 首页与版本目录均返回 HTTP 200。源码打包后也已在独立临时目录安装并成功导入 Host 模块。
+发布验收（2026-11-04）：GitHub Actions 的 Linux Node 22/24 已验证 149 项插件测试，并自动创建 `v0.5.1`，附 `.tgz` 和 SHA-256 校验文件。源码打包后也已在独立临时目录安装并成功导入 Host 模块。撤除 Pages 后保留 6 项版本检测与发布回归测试；真实桌面界面的请求追踪与设置页见上方截图。
 
 
 ## 0.5.1 changes / 精简设置与空间明细
