@@ -49,6 +49,18 @@ function decorative(svg) {
   for (const child of svg.children) assert.ok(['path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'ellipse'].includes(child.type), child.type)
 }
 
+test('settings own no nested scroll surface and embedded mode removes page chrome', () => {
+  const { TraceSettings } = client()
+  const tree = TraceSettings({ embedded: true })
+  assert.equal(tree.props.className, 'dsh-trace trace-settings trace-settings-embedded')
+  const styles = nodes(tree, node => node.type === 'style').map(text).join('')
+  const root = styles.match(/\.dsh-trace\.trace-settings\{([^}]+)\}/)[1]
+  for (const rule of ['box-sizing:border-box', 'width:100%', 'min-width:0', 'min-height:0', 'overflow:visible', 'background:transparent']) assert.ok(root.split(';').includes(rule), rule)
+  assert.match(styles, /\.dsh-trace\.trace-settings\.trace-settings-embedded\{max-width:none;margin:0;padding:0\}/)
+  assert.match(styles, /\.dsh-trace \.archive-list\{max-height:none;overflow:visible;/)
+  assert.match(TraceSettings().props.className, /^dsh-trace trace-settings$/)
+})
+
 test('all tracing outcomes map to explicit Lucide icons, with informational unknown fallback', () => {
   const { statusIcon, iconPaths, icon } = client()
   const expected = { running: 'running', stop: 'check', 'tool-calls': 'tools', 'max-tokens': 'limit', error: 'error', aborted: 'aborted', interrupted: 'interrupted', unknown: 'info' }
