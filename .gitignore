@@ -1,0 +1,13 @@
+node_modules/
+.kb-docs/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+*.tgz
+coverage/
+*.sqlite
+*.sqlite-*
+request-traces/
+docs/releases.json

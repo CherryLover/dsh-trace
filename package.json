@@ -1,0 +1,70 @@
+{
+  "name": "@local/dsh-trace",
+  "version": "0.5.1",
+  "private": true,
+  "type": "module",
+  "description": "Experimental model request, response, HTTP evidence, usage and retry diagnostics for Harness",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "config.js",
+    "archive.js",
+    "sqlite-archive.js",
+    "core.js",
+    "evidence.js",
+    "diagnosis.js",
+    "transport.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "dependencies": {
+    "zod": "4.6.7",
+    "@deepseek-ai/schemastery": "3.18.5"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-plugin-manager",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CherryLover/dsh-trace.git"
+  },
+  "homepage": "https://cherrylover.github.io/dsh-trace/",
+  "bugs": {
+    "url": "https://github.com/CherryLover/dsh-trace/issues"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "deepseek-harness",
+    "cordis",
+    "request-tracing",
+    "diagnostics",
+    "sqlite"
+  ]
+}

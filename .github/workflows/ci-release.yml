@@ -1,0 +1,135 @@
+name: CI, release and Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Serialize main publication. In-progress releases are never cancelled by newer pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node --test scripts/release.test.mjs
+      - run: npm pack --dry-run
+
+  release:
+    name: Publish changed package version
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Validate version and check prior push
+        id: version
+        run: node scripts/release-check.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Install locked dependencies
+        if: steps.version.outputs.changed == 'true'
+        run: npm ci
+      - name: Pack distributable and checksum
+        if: steps.version.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-artifacts
+          npm pack --json --pack-destination release-artifacts > "$RUNNER_TEMP/pack.json"
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
+          import { basename, join } from 'node:path';
+          const packed = JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'pack.json'), 'utf8'));
+          if (packed.length !== 1) throw new Error('Expected exactly one package');
+          const filename = packed[0].filename;
+          if (basename(filename) !== filename || !filename.endsWith('.tgz')) throw new Error('Unexpected pack filename');
+          const hash = createHash('sha256').update(readFileSync(join('release-artifacts', filename))).digest('hex');
+          writeFileSync('release-artifacts/SHA256SUMS', `${hash}  ${filename}\n`);
+          NODE
+          (cd release-artifacts && sha256sum --check SHA256SUMS)
+      - name: Create GitHub release with package assets
+        if: steps.version.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$RELEASE_TAG" --generate-notes)
+          if [[ "$PRERELEASE" == true ]]; then args+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" release-artifacts/*.tgz release-artifacts/SHA256SUMS "${args[@]}"
+
+  page-build:
+    name: Generate release page data
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Build current release catalog
+        run: node scripts/release-page.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Verify page entry exists
+        run: test -f docs/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  page-deploy:
+    name: Deploy GitHub Pages
+    needs: page-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy static page
+        id: deployment
+        uses: actions/deploy-pages@v4
