@@ -158,7 +158,7 @@ function components(initialStates = [], overrides = {}) {
   factory(() => React).apply(ctx)
   return {...ctx.testComponents,reset:() => {cursor = 0}}
 }
-const treeText = tree => tree == null || tree === false ? '' : typeof tree === 'object' ? (tree.children ?? []).map(treeText).join(' ') : String(tree)
+const treeText = tree => tree == null || tree === false || tree.type === 'svg' ? '' : typeof tree === 'object' ? (tree.children ?? []).map(treeText).filter(Boolean).join(' ') : String(tree)
 const visibleText = tree => tree == null || tree === false ? '' : typeof tree !== 'object' ? String(tree) : (tree.type === 'details' && !tree.props.open ? tree.children.slice(0,1) : tree.children ?? []).map(visibleText).join(' ')
 const treeFind = (tree,predicate) => tree && typeof tree === 'object' ? (predicate(tree) ? tree : tree.children.map(child => treeFind(child,predicate)).find(Boolean)) : undefined
 
@@ -432,8 +432,10 @@ test('header replaces export with accessible new-window service status links', (
     assert.ok(link); assert.equal(link.props.target,'_blank')
     assert.equal(link.props.rel,'noopener noreferrer')
     assert.equal(link.props['aria-label'],label+' · newWindow')
-    assert.match(treeText(link),/↗/)
-    assert.equal(treeFind(link,n => n.type === 'span').props['aria-hidden'],true)
+    assert.equal(treeText(link).trim(),label)
+    const glyph = treeFind(link,n => n.type === 'svg')
+    assert.equal(glyph.props.className,'icon external')
+    assert.equal(glyph.props['aria-hidden'],true)
   }
   assert.equal(treeFind(header,n => n.type === 'button'),undefined)
   const source = readFileSync(new URL('../client.js',import.meta.url),'utf8')

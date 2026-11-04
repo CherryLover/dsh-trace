@@ -1,9 +1,9 @@
 {
   "name": "@local/dsh-trace",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "type": "module",
-  "description": "Experimental model request, response, HTTP evidence, usage and retry diagnostics for Harness",
+  "description": "Model request, response, HTTP evidence, usage and retry diagnostics for Harness",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",

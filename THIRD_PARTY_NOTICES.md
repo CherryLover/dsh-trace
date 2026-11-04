@@ -2,7 +2,7 @@
 
 ## Lucide icons
 
-Inline SVG paths for chevron-right, triangle-alert, download, trash-2 and refresh-cw are derived from [Lucide](https://lucide.dev/), https://github.com/lucide-icons/lucide.
+Inline SVG definitions for chevron-right, triangle-alert, trash-2, refresh-cw, circle-check, circle-x, loader-circle, wrench, text-cursor-input, circle-stop, unplug, list, hash, clock, hard-drive, shield-check, save, undo-2, info, external-link, database and activity are derived from [Lucide](https://lucide.dev/), https://github.com/lucide-icons/lucide. Icons retain Lucide's 24 × 24 view box, rounded strokes and currentColor styling.
 
 ISC License
 
